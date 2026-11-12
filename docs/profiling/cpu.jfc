@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="CPU" description="CPU samples" provider="Java Homework">
+  <event name="jdk.ExecutionSample">
+    <setting name="enabled">true</setting>
+    <setting name="period">1 ms</setting>
+  </event>
+  <event name="jdk.NativeMethodSample">
+    <setting name="enabled">true</setting>
+    <setting name="period">1 ms</setting>
+  </event>
+  <event name="jdk.CPULoad">
+    <setting name="enabled">true</setting>
+    <setting name="period">1 s</setting>
+  </event>
+  <event name="jdk.ThreadCPULoad">
+    <setting name="enabled">true</setting>
+    <setting name="period">1 s</setting>
+  </event>
+</configuration>
