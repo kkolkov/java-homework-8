@@ -1,5 +1,7 @@
 package com.example.hellospring;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,14 +18,19 @@ public class MessageController {
 
     private final MessageService service;
 
-    public MessageController(MessageService service) {
+    private final Counter messagesCreated;
+
+    public MessageController(MessageService service, MeterRegistry registry) {
         this.service = service;
+        this.messagesCreated = registry.counter("messages_created_total");
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MessageResponse create(@Valid @RequestBody CreateMessageRequest request) {
-        return service.saveMessage(request.content(), request.username());
+        MessageResponse message = service.saveMessage(request.content(), request.username());
+        messagesCreated.increment();
+        return message;
     }
 
     @GetMapping({"", "/optimized"})

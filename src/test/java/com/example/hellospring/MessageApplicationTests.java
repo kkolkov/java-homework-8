@@ -13,7 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @SpringBootTest @AutoConfigureMockMvc
+@org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability
 class MessageApplicationTests {
+    @Autowired io.micrometer.core.instrument.MeterRegistry registry;
     @Autowired MessageService service;
     @Autowired MessageRepository messages;
     @Autowired UserRepository users;
@@ -58,5 +60,21 @@ class MessageApplicationTests {
             .andExpect(status().isBadRequest());
         mvc.perform(post("/messages").contentType(MediaType.APPLICATION_JSON).content("{\"content\":\""+"a".repeat(256)+"\"}"))
             .andExpect(status().isBadRequest());
+    }
+    @Test void countsOnlyCreatedMessages() throws Exception {
+        double before = registry.get("messages_created_total").counter().count();
+        long count = messages.count();
+        assertTrue(((io.micrometer.prometheus.PrometheusMeterRegistry) registry).scrape()
+            .contains("messages_created_total " + before));
+        mvc.perform(post("/messages").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"new message\"}"))
+            .andExpect(status().isCreated());
+        assertEquals(count + 1, messages.count());
+        assertEquals(before + 1, registry.get("messages_created_total").counter().count());
+        mvc.perform(post("/messages").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\" \"}"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/messages")).andExpect(status().isOk());
+        assertEquals(before + 1, registry.get("messages_created_total").counter().count());
     }
 }

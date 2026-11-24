@@ -1,3 +1,38 @@
+# ДЗ 10. Цикл разработки
+
+Продолжение приложения из ДЗ 8. Java 17, Spring Boot, Gradle, H2.
+
+## Запуск и проверка
+
+```bash
+./gradlew clean build
+java -jar build/libs/java-homework-8-1.0.0.jar
+```
+
+API работает на порту 8088, Actuator — на 8081. Логи приложения выводятся в консоль в JSON.
+
+```bash
+curl http://localhost:8081/actuator/health
+curl http://localhost:8081/actuator/info
+curl -s http://localhost:8081/actuator/prometheus | grep messages_created_total
+curl -X POST http://localhost:8088/api/messages \
+  -H 'Content-Type: application/json' \
+  -d '{"content":"Привет","username":"student"}'
+curl -s http://localhost:8081/actuator/prometheus | grep messages_created_total
+```
+
+После успешного POST счётчик `messages_created_total` увеличивается на 1. Ошибки сохранения и валидации его не увеличивают. Счётчик и база H2 хранятся в памяти и сбрасываются после перезапуска.
+
+Для точного имени `messages_created_total` используется совместимый Prometheus Simpleclient: новый клиент [удаляет зарезервированный суффикс `_created`](https://github.com/micrometer-metrics/micrometer/wiki/1.13-Migration-Guide). Автоконфигурация нового клиента отключена, реестр и эндпоинт Simpleclient подключены явно.
+
+## GitHub Actions
+
+Файл `.github/workflows/ci-build.yml` запускает сборку при push в main и pull request в main. Используется Java 17, выполняется `./gradlew clean build`. В консоли выводятся версия Java, результаты отдельных тестов и общий статус тестирования.
+
+После успешной сборки исполняемый JAR доступен в разделе Actions → запуск → Artifacts → application.
+
+---
+
 # ДЗ 8. Инструменты разработчика
 
 Java 17, Spring Boot, Gradle, JPA, H2. Порт 8088.

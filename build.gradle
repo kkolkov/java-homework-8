@@ -24,6 +24,10 @@ dependencies {
     implementation jpaDependency
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-registry-prometheus-simpleclient'
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
     runtimeOnly 'com.h2database:h2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -35,6 +39,14 @@ tasks.withType(JavaCompile).configureEach {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+    }
+    afterSuite { descriptor, result ->
+        if (!descriptor.parent) {
+            println "Tests: ${result.resultType}, total: ${result.testCount}, failed: ${result.failedTestCount}"
+        }
+    }
 }
 
 tasks.register('runTestDataInitializer', Exec) {
